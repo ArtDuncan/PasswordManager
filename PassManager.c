@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 struct Entry {
     char SiteName[32];
@@ -19,8 +20,35 @@ struct EntryCompressed {
 struct Header {
     int EntryNum;
     int EntryLocations[32];
+    struct Entry* EntryPointers[32];
     char EntryNameSorted[32][32];
 };
+
+//Helper function to read a Y or N. Returns 1 on Y, 2 on N, or 3 on C
+int YN(char X)
+{
+    int check = 0;
+    while(check == 0)
+    {
+        if(X == 89 || X == 121)
+        {
+            check = 1;
+        }
+        else if(X == 78 || X == 110)
+        {
+            check = 2;
+        }
+        else if(X == 67 || X == 99)
+        {
+            check = 3;
+        }
+        else
+        {
+            printf("Unable to read. Please try again\n");
+        }
+    }
+    return check;
+}
 
 int makeNewFile(FILE* fptr)
 {
@@ -30,7 +58,7 @@ int makeNewFile(FILE* fptr)
     char infoByte = 0;
     char buf[128];
     char buf2[128];
-    char current;
+    //char current;
 
     while(test == 0)
     {
@@ -113,8 +141,8 @@ int makeNewFile(FILE* fptr)
         }
     }
 
-    struct Header fHead;
-    fHead.EntryNum = 0;
+    //struct Header fHead;
+    //fHead.EntryNum = 0;
 
     fputc(infoByte, fptr);
     fwrite(&seed, sizeof(double), 1, fptr);
@@ -142,6 +170,149 @@ int readOldFile(FILE* fptr)
 
 
     return 0;
+}
+
+int addNewEntry(FILE* fptr, struct Header head)
+{
+    char buf[32];
+    char buf2[32];
+    int check = 0;
+    struct Entry *newEntry = malloc(sizeof(struct Entry));
+
+    while(check == 0 || check == 2)
+    {
+        printf("What is the name of the program?\n");
+        scanf(" %s", buf);
+        strcpy(buf2, buf);
+        printf("Is %s correct?(Y/N/C)\n", buf);
+        check = YN(buf[0]);
+        if(check == 3)
+        { 
+            free(newEntry);
+            return -1;
+        }
+    }
+    for(int i = 0; buf2[i] != 0; i++)
+    {
+        buf2[i] = toupper(buf2[i]);
+    }
+    strcpy(newEntry->SiteName, buf2);
+    
+    check = 0;
+    while(check == 0 || check == 2)
+    {
+        printf("What is your username?\n");
+        scanf(" %s", buf);
+        strcpy(buf2, buf);
+        printf("Is %s correct?(Y/N/C)\n", buf);
+        check = YN(buf[0]);
+        if(check == 3)
+        { 
+            free(newEntry);
+            return -1;
+        }
+    }
+    strcpy(newEntry->UserName, buf2);
+
+    check = 0;
+    while(check == 0 || check == 2)
+    {
+        printf("What is your password?\n");
+        scanf(" %s", buf);
+        strcpy(buf2, buf);
+        printf("Is %s correct?(Y/N/C)\n", buf);
+        check = YN(buf[0]);
+        if(check == 3)
+        { 
+            free(newEntry);
+            return -1;
+        }
+    }
+    strcpy(newEntry->Password, buf2);
+
+    head.EntryNum++;
+    head.EntryPointers[head.EntryNum] = newEntry;
+
+    return 0;
+}
+
+int removeEntry(struct Header head)
+{
+
+    return 0;
+}
+
+int updateEntry(struct Header head)
+{
+
+    return 0;
+}
+
+//Searches the entries in the header for a match
+int searchEntries(struct Header head)
+{
+    char buf[32];
+    char buf2[1];
+    int check = 0;
+
+    while(check == 0 || check == 3)
+    {
+        printf("What is the name of the program?\n");
+        scanf(" %s", buf);
+        printf("Is %s correct?(Y/N/C)\n", buf);
+        scanf(" %c", buf2);
+        check = YN(*buf2);
+        if(check == 3){ return -1; }
+    }
+    for(int i = 0; buf[i] != 0; i++)
+    {
+        buf[i] = toupper(buf[i]);
+    }
+
+
+    int mid = head.EntryNum/2;
+    int left = 0;
+    int right = head.EntryNum;
+    int direction = strcmp(head.EntryNameSorted[mid], buf);
+    while(check > -1)
+    {
+        if(direction == 0)
+        {
+            return mid;
+        }
+        else if(left == right)
+        {
+            printf("Is %s what you're looking for?\n", head.EntryNameSorted[left]);
+            scanf(" %c", buf2);
+            check = YN(*buf2);
+        }
+        else if(right - left == 1)
+        {
+            printf("Are %s or %s what you're looking for? 1 for the first option, 2 for the second, N for no\n", head.EntryNameSorted[left], head.EntryNameSorted[right]);
+            scanf(" %c", buf2);
+            if((int)*buf2 == 49){ return left; }
+            if((int)*buf2 == 50){ return right; }
+            else
+            {
+                printf("Unable to find entry\n");
+                return -1;
+            }
+        }
+        else if(direction < 0)
+        {
+            left = left;
+            right = mid;
+            mid = (left + right)/2;
+        }
+        else if(direction > 0)
+        {
+            left = mid;
+            right = right;
+            mid = (left + right)/2;
+        }
+    }
+    
+    return -1;
 }
 
 int main(int argc, char* argv[]){
@@ -183,6 +354,7 @@ int main(int argc, char* argv[]){
     {
         readOldFile(fptr);
     }
-    
+
+
 
 }
