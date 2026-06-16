@@ -315,6 +315,62 @@ int searchEntries(struct Header head)
     return -1;
 }
 
+int useFile(FILE* fptr, char* fileName)
+{
+    int active = 1;
+    char buf[32];
+    int check;
+
+    printf("Now using %s\n", fileName);
+
+    while(active == 1)
+    {
+        check = 0;
+        printf("What would you like to do with %s? Type help or 0 for a list of options\n", fileName);
+        scanf(" %s", buf);
+
+        if(strcmp(buf, "help") == 0 || strcmp(buf, "0") == 0)
+        {
+            printf("Type the option or the number associated with it to perform that action\n");
+            printf("1. Search for an entry\n2. Add a new entry\n3. Edit an entry\n4. Delete an entry\n");
+            scanf(" %s", buf);
+        }
+
+        if(strcmp(buf, "search") == 0 || strcmp(buf, "1") == 0)
+        {
+            while(check == 0 || check == 2)
+            {
+                printf("Please type the name of the entry you are looking for\n");
+                scanf(" %s", buf);
+                printf("Is %s correct?(Y/N/C)\n", buf);
+                scanf(" %c", buf);
+                check = YN(*buf);
+            }
+            if(check == 3)
+            {
+                printf("Cancelling search\n");
+            }
+            else
+            {
+                //TODO Implement searching entries
+            }
+
+        }
+        if(strcmp(buf, "add") == 0 || strcmp(buf, "2") == 0)
+        {
+            //TODO Implement adding entries
+        }
+        if(strcmp(buf, "edit") == 0 || strcmp(buf, "3") == 0)
+        {
+            //TODO implement editing entries
+        }
+        if(strcmp(buf, "delete") == 0 || strcmp(buf, "4") == 0)
+        {
+            //TODO implement deleting entries
+        }
+    }
+}
+
 int main(int argc, char* argv[]){
 
     FILE* fptr;
@@ -323,6 +379,7 @@ int main(int argc, char* argv[]){
     int check = 0;
     int newFile = 0;
 
+    //First asks user for a file
     printf("Welcome to Art's Password Manager. Please enter a filename\n");
     while(check == 0)
     {
@@ -333,6 +390,7 @@ int main(int argc, char* argv[]){
         printf("Please enter a filename\n");
     }
     
+    //If the file is found, it opens it and runs useFile(). Otherwise, it creates a file and sets newFile to 1
     fptr = fopen(filename, "r");
     if(fptr == NULL)
     {
@@ -346,13 +404,13 @@ int main(int argc, char* argv[]){
         }
         else
         {
-            return 0;
         }
     }
 
     if(newFile == 0)
     {
-        readOldFile(fptr);
+        printf("hi\n");
+        useFile(fptr, filename);
     }
 
 
