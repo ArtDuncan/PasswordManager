@@ -144,8 +144,8 @@ int makeNewFile(FILE* fptr)
     //struct Header fHead;
     //fHead.EntryNum = 0;
 
-    fputc(infoByte, fptr);
-    fwrite(&seed, sizeof(double), 1, fptr);
+    //fputc(infoByte, fptr);
+    //fwrite(&seed, sizeof(double), 1, fptr);
 
     return 0;
 }
@@ -319,9 +319,14 @@ int useFile(FILE* fptr, char* fileName)
 {
     int active = 1;
     char buf[32];
-    int check;
+    char buf2[32];
+    int check, numEntries, debug;
 
     printf("Now using %s\n", fileName);
+
+    fseek(fptr, 0, SEEK_SET);
+    fread(&numEntries, sizeof(int), 1, fptr);
+    //printf("%d entries found\n", numEntries);
 
     while(active == 1)
     {
@@ -333,15 +338,22 @@ int useFile(FILE* fptr, char* fileName)
         {
             printf("Type the option or the number associated with it to perform that action\n");
             printf("1. Search for an entry\n2. Add a new entry\n3. Edit an entry\n4. Delete an entry\n");
+            printf("5. Close the program\n");
             scanf(" %s", buf);
         }
 
         if(strcmp(buf, "search") == 0 || strcmp(buf, "1") == 0)
         {
+            if(numEntries == 0)
+            {
+                printf("File has 0 entries, cancelling search.\n");
+                check = -1;
+            }
             while(check == 0 || check == 2)
             {
                 printf("Please type the name of the entry you are looking for\n");
                 scanf(" %s", buf);
+                strcpy(buf, buf2);
                 printf("Is %s correct?(Y/N/C)\n", buf);
                 scanf(" %c", buf);
                 check = YN(*buf);
@@ -350,15 +362,50 @@ int useFile(FILE* fptr, char* fileName)
             {
                 printf("Cancelling search\n");
             }
-            else
+            if(check == 1)
             {
                 //TODO Implement searching entries
+                
             }
 
         }
         if(strcmp(buf, "add") == 0 || strcmp(buf, "2") == 0)
         {
-            //TODO Implement adding entries
+            struct Entry newEntry;
+            while(check == 0 || check == 2)
+            {
+                printf("Please insert the name of the entry: \n");
+                scanf(" %s", buf);
+                strcpy(newEntry.SiteName, buf);
+                printf("Is %s correct?(Y/N/C)\n", buf);
+                scanf(" %c", buf);
+                check = YN(*buf);
+            }
+            check = 0;
+            while(check == 0 || check == 2)
+            {
+                printf("Please insert your username: \n");
+                scanf(" %s", buf);
+                strcpy(newEntry.UserName, buf);
+                printf("Is %s correct?(Y/N/C)\n", buf);
+                scanf(" %c", buf);
+                check = YN(*buf);
+            }
+            check = 0;
+            while(check == 0 || check == 2)
+            {
+                printf("Please insert your password: \n");
+                scanf(" %s", buf);
+                strcpy(newEntry.Password, buf);
+                printf("Is %s correct?(Y/N/C)\n", buf);
+                scanf(" %c", buf);
+                check = YN(*buf);
+            }
+
+            fseek(fptr, 0, SEEK_END);
+            debug = fwrite(&newEntry, sizeof(newEntry), 1, fptr);
+            numEntries++;
+            printf("New entry saved %d\n", debug);
         }
         if(strcmp(buf, "edit") == 0 || strcmp(buf, "3") == 0)
         {
@@ -368,7 +415,14 @@ int useFile(FILE* fptr, char* fileName)
         {
             //TODO implement deleting entries
         }
+        if(strcmp(buf, "close") == 0 || strcmp(buf, "5") == 0)
+        {
+            active = 0;
+        }
     }
+
+    //fclose(fptr2);
+    return 0;
 }
 
 int main(int argc, char* argv[]){
@@ -391,16 +445,19 @@ int main(int argc, char* argv[]){
     }
     
     //If the file is found, it opens it and runs useFile(). Otherwise, it creates a file and sets newFile to 1
-    fptr = fopen(filename, "r");
+    fptr = fopen(filename, "rb+");
     if(fptr == NULL)
     {
         printf("No file found at %s. Would you like to create one?(Y/N)\n", filename);
         scanf(" %c", buf);
         if(buf[0] == 89 || buf[0] == 121)
         {
-            fptr = fopen(filename, "a");
+            fptr = fopen(filename, "wb+");
             newFile = 1;
+            int numEntries = 0;
+            fwrite(&numEntries, sizeof(int), 1, fptr);
             makeNewFile(fptr);
+            useFile(fptr, filename);
         }
         else
         {
@@ -413,6 +470,6 @@ int main(int argc, char* argv[]){
         useFile(fptr, filename);
     }
 
-
+    fclose(fptr);
 
 }
